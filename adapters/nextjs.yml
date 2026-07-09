@@ -1,0 +1,36 @@
+adapter:
+  id: nextjs
+  name: Next.js
+  applies_to:
+    - website
+    - web_app
+    - storefront
+    - marketing_site
+
+detect:
+  any:
+    - next.config.js
+    - next.config.mjs
+    - next.config.ts
+    - app
+    - pages
+
+commands:
+  install: "npm install"
+  lint: "npm run lint --if-present"
+  typecheck: "npm run typecheck --if-present"
+  build: "npm run build"
+  test: "npm test --if-present"
+  screenshot: "npm run test:e2e --if-present"
+  package: ""
+
+proof:
+  recommended:
+    - install_log
+    - lint_log
+    - build_log
+    - test_log
+    - desktop_screenshot
+    - mobile_screenshot
+    - console_error_check
+

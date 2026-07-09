@@ -1,0 +1,33 @@
+adapter:
+  id: strapi
+  name: Strapi CMS
+  applies_to:
+    - cms
+    - headless_cms
+    - content_platform
+
+detect:
+  any:
+    - config/admin.js
+    - config/database.js
+    - src/api
+    - src/components
+    - src/content-types
+
+commands:
+  install: "npm install"
+  lint: "npm run lint --if-present"
+  typecheck: "npm run typecheck --if-present"
+  build: "npm run build"
+  test: "npm test --if-present"
+  screenshot: "npm run test:e2e --if-present"
+  package: ""
+
+proof:
+  recommended:
+    - content_types_reviewed
+    - seed_data_verified
+    - admin_build_log
+    - api_health_check
+    - preview_workflow_check
+

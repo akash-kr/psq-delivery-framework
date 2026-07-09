@@ -1,0 +1,28 @@
+adapter:
+  id: node
+  name: Node.js
+  applies_to:
+    - api
+    - cli
+    - package
+    - service
+
+detect:
+  any:
+    - package.json
+
+commands:
+  install: "npm install"
+  lint: "npm run lint --if-present"
+  typecheck: "npm run typecheck --if-present"
+  build: "npm run build --if-present"
+  test: "npm test --if-present"
+  screenshot: ""
+  package: "npm pack --dry-run"
+
+proof:
+  recommended:
+    - install_log
+    - test_log
+    - package_contents
+

@@ -1,0 +1,53 @@
+# Default gate definitions.
+#
+# Gates are intentionally generic. Adapters map them to stack-specific commands.
+
+gates:
+  - id: G0
+    name: scope
+    purpose: "Confirm task intent, constraints, and required proof before implementation."
+    required:
+      - issue_or_task_present
+      - contract_present
+      - assumptions_recorded
+      - decision_needed_known
+    on_fail: "Stop and clarify scope before building."
+
+  - id: G1
+    name: build
+    purpose: "Prove the project can install, lint, typecheck, and build."
+    required:
+      - install_passes
+      - lint_or_equivalent_passes
+      - build_or_equivalent_passes
+    on_fail: "Fix the build or report a blocker."
+
+  - id: G2
+    name: behavior
+    purpose: "Prove acceptance criteria through tests, checks, or cited verification."
+    required:
+      - acceptance_criteria_checked
+      - relevant_tests_pass
+      - regressions_recorded
+    on_fail: "Fix behavior or document a clear rework item."
+
+  - id: G3
+    name: proof
+    purpose: "Collect evidence that a reviewer can inspect without rerunning everything."
+    required:
+      - proof_report_written
+      - command_outputs_recorded
+      - screenshots_or_replacement_evidence_recorded
+      - risks_recorded
+    on_fail: "Collect missing proof before requesting review."
+
+  - id: G4
+    name: review_ready
+    purpose: "Prepare a human decision with outputs, proof, and recommended next issues."
+    required:
+      - changed_files_summarized
+      - decision_needed_clear
+      - next_issues_recommended
+      - pr_or_artifact_ready
+    on_fail: "Do not mark review-ready."
+

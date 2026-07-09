@@ -1,0 +1,35 @@
+adapter:
+  id: python
+  name: Python
+  applies_to:
+    - api
+    - cli
+    - library
+    - service
+
+detect:
+  any:
+    - pyproject.toml
+    - requirements.txt
+    - setup.py
+
+commands:
+  install: "python3 -m pip install -r requirements.txt"
+  lint: "python3 -m ruff check ."
+  typecheck: "python3 -m mypy ."
+  build: "python3 -m compileall ."
+  test: "python3 -m pytest"
+  screenshot: ""
+  package: "python3 -m build"
+
+proof:
+  recommended:
+    - install_log
+    - lint_log
+    - typecheck_log
+    - test_log
+    - package_log
+
+notes:
+  - "If the project does not use ruff, mypy, pytest, or build, override commands in framework/harness.json."
+

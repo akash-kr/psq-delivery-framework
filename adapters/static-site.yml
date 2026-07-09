@@ -1,0 +1,30 @@
+adapter:
+  id: static-site
+  name: Static Site
+  applies_to:
+    - html
+    - css
+    - javascript
+    - docs
+
+detect:
+  any:
+    - index.html
+    - public/index.html
+    - site/index.html
+
+commands:
+  install: ""
+  lint: ""
+  typecheck: ""
+  build: ""
+  test: ""
+  screenshot: ""
+  package: ""
+
+proof:
+  recommended:
+    - changed_files
+    - manual_browser_check
+    - screenshots_when_visual
+

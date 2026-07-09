@@ -1,0 +1,33 @@
+adapter:
+  id: php-symfony
+  name: PHP Symfony
+  applies_to:
+    - web_app
+    - api
+    - service
+
+detect:
+  any:
+    - composer.json
+    - symfony.lock
+    - config/bundles.php
+
+commands:
+  install: "composer install"
+  lint: "composer lint"
+  typecheck: "composer analyse"
+  build: "php bin/console cache:warmup"
+  test: "composer test"
+  screenshot: ""
+  package: ""
+
+proof:
+  recommended:
+    - composer_install_log
+    - lint_log
+    - test_log
+    - route_check
+
+notes:
+  - "Override command names in framework/harness.json if the Symfony project uses different Composer scripts."
+

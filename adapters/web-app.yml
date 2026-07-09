@@ -1,0 +1,32 @@
+adapter:
+  id: web-app
+  name: Generic Web App
+  applies_to:
+    - spa
+    - server-rendered-web
+    - frontend-backend-app
+
+detect:
+  any:
+    - package.json
+    - pnpm-lock.yaml
+    - yarn.lock
+    - package-lock.json
+
+commands:
+  install: "npm install"
+  lint: "npm run lint --if-present"
+  typecheck: "npm run typecheck --if-present"
+  build: "npm run build --if-present"
+  test: "npm test --if-present"
+  screenshot: "npm run test:e2e --if-present"
+  package: ""
+
+proof:
+  recommended:
+    - install_log
+    - build_log
+    - test_log
+    - browser_console_status_when_ui
+    - screenshots_when_ui
+

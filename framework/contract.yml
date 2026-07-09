@@ -1,0 +1,66 @@
+# Grounded Delivery Contract
+#
+# Copy and edit this file for each project or milestone.
+
+contract:
+  id: grounded-delivery-contract
+  version: 0.1.0
+  status: draft
+  owner: unset
+  approvers:
+    product: unset
+    design: unset
+    engineering: unset
+    qa: unset
+
+project:
+  name: unset
+  type: unset # website | web_app | cms | api | library | mobile | docs | mixed
+  adapter: unset # see adapters/
+  repo: unset
+
+objective:
+  summary: "Describe the outcome this project or milestone must deliver."
+  primary_users:
+    - unset
+  success_signals:
+    - "A reviewer can verify the outcome from the proof bundle."
+
+scope:
+  in:
+    - "Define the smallest valuable outcome."
+  out:
+    - "Name adjacent work that should not be pulled into this run."
+  assumptions:
+    - "Replace this with explicit assumptions."
+  unknowns:
+    - "Replace this with known gaps or decisions needed."
+
+quality:
+  required:
+    - installable
+    - buildable
+    - testable
+    - documented
+    - proof_collected
+  optional:
+    - browser_screenshots
+    - accessibility_check
+    - performance_check
+
+acceptance:
+  - id: AC-001
+    statement: "The contract is filled out for the project."
+    proof: "framework/contract.yml has project, objective, scope, and acceptance sections populated."
+
+proof:
+  required_files:
+    - .grounding/proof-report.md
+  required_commands:
+    - scripts/verify-contract
+    - scripts/run-gate all
+
+change_control:
+  contract_changes_require_review: true
+  approval_note: "Contract changes should be visible in PR review."
+

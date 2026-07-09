@@ -1,0 +1,18 @@
+contract:
+  id: example-static-site
+  version: 0.1.0
+  status: draft
+
+project:
+  name: Example Static Site
+  type: website
+  adapter: static-site
+
+objective:
+  summary: "Publish a simple static site with proof that pages render."
+
+acceptance:
+  - id: AC-001
+    statement: "The home page exists."
+    proof: "index.html is present."
+

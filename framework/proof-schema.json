@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/grounded-delivery-framework/proof-schema.json",
+  "title": "Grounded Delivery Proof Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "project",
+    "timestamp",
+    "output_delivered",
+    "proof",
+    "decision_needed",
+    "recommended_next_issues"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "project": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "output_delivered": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "proof": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "gate_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "gate",
+          "status"
+        ],
+        "properties": {
+          "gate": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "blocked",
+              "skipped"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decision_needed": {
+      "type": "string"
+    },
+    "recommended_next_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "lane"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "lane": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+
