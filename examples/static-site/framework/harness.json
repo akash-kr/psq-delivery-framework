@@ -14,13 +14,13 @@
     "screenshots_dir": ".grounding/screenshots"
   },
   "commands": {
-    "install": "",
-    "lint": "",
-    "typecheck": "",
-    "build": "",
-    "test": "",
-    "screenshot": "",
-    "package": ""
+    "install": "skip",
+    "lint": "skip",
+    "typecheck": "skip",
+    "build": "skip",
+    "test": "skip",
+    "screenshot": "skip",
+    "package": "skip"
   },
   "gates": {
     "G0": [
@@ -38,7 +38,8 @@
       "collect_proof"
     ],
     "G4": [
-      "write_report"
+      "write_report",
+      "validate_proof"
     ]
   }
 }

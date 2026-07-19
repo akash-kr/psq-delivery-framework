@@ -13,14 +13,17 @@ detect:
     - public/index.html
     - site/index.html
 
+# "skip" is an explicit decision that a step does not apply to this stack.
+# A static site has no install/build; leave real commands (e.g. htmlhint,
+# a Playwright screenshot run) in place of "skip" where the project has them.
 commands:
-  install: ""
-  lint: ""
-  typecheck: ""
-  build: ""
-  test: ""
-  screenshot: ""
-  package: ""
+  install: "skip"
+  lint: "skip"
+  typecheck: "skip"
+  build: "skip"
+  test: "skip"
+  screenshot: "skip"
+  package: "skip"
 
 proof:
   recommended:

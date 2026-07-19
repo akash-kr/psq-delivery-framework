@@ -1,0 +1,20 @@
+# Escalation rules — read by tools/escalation-watcher.py.
+# One file. Change a threshold, change the rule — no code.
+#
+# Run once (cron/launchd/CI schedule):  python3 tools/escalation-watcher.py
+# Or keep it running:                   python3 tools/escalation-watcher.py --loop 30
+# Set SLACK_WEBHOOK_URL to notify Slack; otherwise alerts print to stdout.
+
+gate_red:
+  for_hours: 4
+  notify: "owner, #dev-qa"
+
+contract_change:
+  watch: framework/contract.yml
+  require_trailer: Approved-by
+  notify: "design, qa"
+
+milestone_risk:
+  due: ""
+  hours_before: 24
+  notify: "owner"

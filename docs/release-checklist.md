@@ -4,7 +4,7 @@ Before publishing this as a reusable GitHub template:
 
 - Choose the repository name.
 - Choose a license.
-- Decide whether Symphony and Linear docs are core docs or optional integration docs.
+- Decide whether orchestrator/tracker integration docs are core docs or optional.
 - Replace placeholder URLs and IDs.
 - Decide whether generated proof reports should be committed in consumer repos.
 - Add contribution guidelines if external contributors are expected.

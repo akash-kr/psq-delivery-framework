@@ -12,7 +12,7 @@ Endpoints:
                           and appends a line to reviews/queue.jsonl
     GET  /*             → static files from --root
 
-Zero third-party dependencies. Pair with review-watcher.sh to auto-start
+Zero third-party dependencies. Pair with annotation-watcher.sh to auto-start
 agent runs on each submission.
 """
 import argparse

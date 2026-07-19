@@ -16,17 +16,17 @@ Pick the closest adapter from `adapters/`:
 - `python`
 - `php-symfony`
 
-Set it in `framework/harness.json`:
+Run `scripts/detect-stack` to see which adapters match the repo, then apply one:
 
-```json
-{
-  "project": {
-    "adapter": "nextjs"
-  }
-}
+```bash
+scripts/apply-adapter nextjs
 ```
 
-Then copy the adapter commands into the `commands` section and edit them for the project.
+This sets `project.adapter` and fills every empty command in
+`framework/harness.json` from the adapter. Commands you have already
+customized are kept. Edit the result for the project; mark steps that
+genuinely do not apply with the explicit value `"skip"` — a gate where zero
+checks ran fails rather than passing vacuously.
 
 ## 3. Fill The Contract
 
@@ -52,13 +52,24 @@ scripts/collect-proof
 
 ## 5. Wire CI
 
-Use `.github/workflows/gates.yml` as the default GitHub Actions workflow. It runs the same local harness commands a human or agent would run.
+Use `.github/workflows/gates.yml` (GitHub Actions) or `.gitlab-ci.yml` (GitLab) — both run the same local harness commands a human or agent would run. Enable branch protection with required status checks and "Require review from Code Owners" so `.github/CODEOWNERS` actually enforces contract sign-off.
 
-## 6. Wire Symphony
+## 6. Wire Escalations
 
-Copy `WORKFLOW.template.md` to `WORKFLOW.md`, replace placeholders, and follow `docs/symphony.md`.
+Edit thresholds in `watcher.rules.yml`, then schedule the watcher (cron, launchd, or a CI schedule):
 
-## 7. Decide License And Support
+```bash
+python3 tools/escalation-watcher.py            # one check
+python3 tools/escalation-watcher.py --loop 30  # every 30 minutes
+```
+
+Set `SLACK_WEBHOOK_URL` to alert Slack; without it, alerts print to stdout.
+
+## 7. Wire An Orchestrator (Optional)
+
+If agents work issues from a tracker via an orchestrator daemon, copy `WORKFLOW.template.md` to `WORKFLOW.md` and replace the `{{ ... }}` placeholders (tracker kind, workspace root, runner command, port). Secrets go in `.env` (see `.env.example`); the workflow body already routes lanes and enforces the end-of-run format.
+
+## 8. Decide License And Support
 
 Before publishing a public reusable repo, choose:
 

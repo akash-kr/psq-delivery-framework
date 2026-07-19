@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# review-watcher.sh — watches reviews/inbox for submitted annotations and
-# launches a headless agent run per submission.
+# annotation-watcher.sh — watches reviews/inbox for submitted HTML-doc
+# annotations and launches a headless agent run per submission.
+# (Not the escalation watcher — that is tools/escalation-watcher.py.)
 #
 # Usage:
-#   ./review-watcher.sh [ROOT]           # ROOT defaults to current dir
+#   ./annotation-watcher.sh [ROOT]       # ROOT defaults to current dir
 #
 # Env:
 #   AGENT_CMD   command that accepts a prompt as its last arg.

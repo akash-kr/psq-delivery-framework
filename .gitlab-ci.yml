@@ -1,0 +1,15 @@
+# GitLab mirror of .github/workflows/gates.yml — same harness commands,
+# so "the pipeline is the gate" holds on either forge.
+gates:
+  image: python:3.12
+  script:
+    - scripts/verify-contract
+    - scripts/run-gate all
+  after_script:
+    - scripts/collect-proof
+  artifacts:
+    when: always
+    paths:
+      - .grounding/
+      - framework/contract.yml
+      - framework/harness.json

@@ -1,0 +1,8 @@
+# The contract is the anchor: changes to it require sign-off from the people
+# who agreed to it (deck slide 4 — "edited by Dev, approved by Design + QA").
+# Add design/QA GitHub handles alongside the owner as the team onboards.
+# Requires branch protection on the default branch with
+# "Require review from Code Owners" enabled — CODEOWNERS alone enforces nothing.
+/framework/contract.yml @akash-kr
+/framework/gates.yml @akash-kr
+/watcher.rules.yml @akash-kr

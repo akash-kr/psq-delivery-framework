@@ -7,6 +7,8 @@
 .grounding/screenshots/
 .grounding/tmp/
 .grounding/proof-report.md
+.grounding/proof-report.json
+.grounding/gate-status.json
 
 node_modules/
 dist/

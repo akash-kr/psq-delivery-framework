@@ -33,9 +33,9 @@ guardrails (vs. prompted ones), an eval ring, and a preview/demo surface.
 ## 1. The Seven Layers
 
 ```
- L0  STEERING      you + Scoper agent        idea → contract → Linear issues
- L1  CONTROL PLANE Linear                    states, lanes, blocked-by, decisions
- L2  ORCHESTRATOR  Symphony-conformant daemon (Mac mini → VM)
+ L0  STEERING      you + Scoper agent        idea → contract → tracker issues
+ L1  CONTROL PLANE issue tracker             states, lanes, blocked-by, decisions
+ L2  ORCHESTRATOR  small polling daemon (Mac mini → VM)
  L3  RUNNERS       Claude Code headless / Codex / Hermes (pluggable)
  L4  GUARDRAILS    enforced (hooks, branch protection) + prompted (rules file)
  L5  HARNESS       G0–G4 gate loop, atomic commits, proof bundle, PR
@@ -63,7 +63,7 @@ Output, in order:
    only. Anything unresolved becomes a recorded assumption in the contract, not a blocker.
 2. **`framework/contract.yml`** — filled, not template. Objective, scope in/out, assumptions,
    acceptance criteria each with a named proof.
-3. **Linear project + issues.** Epics → issues, each issue carrying:
+3. **Tracker project + issues.** Epics → issues, each issue carrying:
    - lane label (`lane:research|spec|design|code|qa|packaging`)
    - acceptance criteria (checklist in description)
    - required proof (what evidence closes it)
@@ -90,9 +90,9 @@ what merged, what's in flight. Target steady state: **~15 min/day per active pro
 
 ---
 
-## 3. L1 — Control Plane: Linear
+## 3. L1 — Control Plane: the Issue Tracker
 
-Linear is the source of truth for *intent and state*. The repo is the source of truth for
+The issue tracker is the source of truth for *intent and state*. The repo is the source of truth for
 *code and proof*. The daemon is the source of truth for *dispatch*.
 
 ### 3.1 State machine
@@ -121,8 +121,7 @@ research memos and production code.
 
 ## 4. L2 — Orchestrator: the Daemon
 
-Conform to the Symphony spec (openai/symphony, Apr 2026) rather than inventing a scheduler. It's
-a small, well-specified loop: poll tracker → dispatch eligible issues to bounded-concurrency
+Keep the daemon a small, well-specified loop rather than inventing a scheduler: poll tracker → dispatch eligible issues to bounded-concurrency
 agent sessions → stream events → reconcile → retry with backoff → stop runs whose issues changed
 state. No database; tracker + filesystem are the recovery state.
 
@@ -134,7 +133,7 @@ Deployment path:
 
 ### 4.1 Workspaces without worktrees
 
-Your instinct is right and Symphony agrees: **no worktrees.** Each issue gets a plain directory
+Your instinct is right: **no worktrees.** Each issue gets a plain directory
 with a fresh shallow clone:
 
 ```
@@ -150,7 +149,7 @@ with a fresh shallow clone:
 
 ### 4.2 WORKFLOW.md
 
-Per Symphony: each project repo owns a `WORKFLOW.md` — YAML front matter (states, concurrency,
+Each project repo owns a `WORKFLOW.md` — YAML front matter (states, concurrency,
 runner exe, timeouts, workspace hooks) + the prompt body that tells the agent how to behave.
 Your `WORKFLOW.template.md` becomes this file. The framework repo ships the template; each
 project versions its own copy. Process is code, reviewed like code.
@@ -164,14 +163,14 @@ Recommendation, with reasoning:
 | Runner | Role | Why |
 |---|---|---|
 | **Claude Code headless** (`claude -p`) | **Primary** | Hooks give you *enforceable* guardrails (a PreToolUse hook can hard-block `git push --force` — a prompt can only ask nicely). Skills give you reusable roles (Scoper, Reviewer). Subagents give you cheap fan-out. |
-| **Codex app-server** | Secondary | Symphony's reference implementation targets it natively — useful if you want to run the reference daemon unmodified while you build. Also a genuinely different model for the eval ring (see L6). |
+| **Codex app-server** | Secondary | A genuinely different model family for the eval ring (see L6) — cross-model review catches what the builder's model family misses. |
 | **Hermes** | Pluggable | Wrap it behind the same runner contract. Good candidate for narrow lanes (research, QA sweeps) where you control its harness fully. |
 
 Design rule: the daemon talks to runners through one thin contract — `start(workspace, prompt) →
 event stream → exit status`. Runner choice becomes a per-project (or per-lane) config value in
-WORKFLOW.md, not an architectural commitment. Practical starting point: **run the Symphony
-reference daemon with Codex to get moving this week, and make Claude Code the first runner you
-add** — its hook system is what makes L4 enforceable rather than aspirational.
+WORKFLOW.md, not an architectural commitment. Practical starting point: **a minimal daemon with
+Claude Code as the first runner** — its hook system is what makes L4 enforceable rather than
+aspirational.
 
 ---
 
@@ -188,7 +187,7 @@ Split every rule into the tier that can actually hold it.
 | No destructive git | Claude Code PreToolUse hook + git wrapper in the workspace image: block `push --force`, `reset --hard`, `clean -fd`, `checkout` to older commits, `commit --amend`, any push to `main`. |
 | No secrets exposure | `.env*` never in the clone (daemon injects only whitelisted env); commit-time secret scan (gitleaks) as a required check. |
 | Blast radius | Agent's credentials are a deploy key scoped to the one repo, push-only-to-`feat/*`. Workspace is a disposable directory; worst case is deleted and re-cloned. |
-| Spend/time caps | Daemon-level per-session timeout, per-day session budget, token budget per issue (Symphony config). |
+| Spend/time caps | Daemon-level per-session timeout, per-day session budget, token budget per issue (daemon config). |
 | Green-without-proof | CI job fails the PR if `.grounding/proof/<ISSUE-KEY>/` is missing or doesn't validate against `proof-schema.json`. |
 
 ### 6.2 Prompted (rules file — steipete-derived, the durable subset)
@@ -222,7 +221,7 @@ What one agent session does, start to finish:
               screenshots (playwright for UI, desktop+mobile), citations for research lanes
  6. G4 PR     open PR: fixed body format, proof bundle committed, preview link,
               "Decision needed", recommended next issues
- 7. HANDOFF   Linear → Human Review. Agent stops. Always.
+ 7. HANDOFF   tracker → Human Review. Agent stops. Always.
 ```
 
 Failure handling: gate fails twice on the same cause → stop, write blocker, move to `Blocked`.
@@ -311,13 +310,13 @@ Branch protection on a real repo; guardrail hooks (git wrapper + Claude Code Pre
 AGENTS.md v2 with the atomic-commit rules; proof-validation CI job. Run the G0–G4 loop
 *manually* via Claude Code on 2–3 real issues. This validates the harness before any daemon.
 
-**Phase 1 — Linear + Scoper (week 1).**
-Linear workspace with the state machine + lanes; build the Scoper as a Claude Code skill; scope
+**Phase 1 — Tracker + Scoper (week 1).**
+Tracker workspace with the state machine + lanes; build the Scoper as a Claude Code skill; scope
 one real project through it; execute issues manually. Validates the steering layer.
 
 **Phase 2 — Daemon on Mac mini (weeks 2–3).**
-Deploy the Symphony reference implementation (Codex runner) pointed at Linear. Add the Claude
-Code runner behind the runner contract. WORKFLOW.md per project. Now agents work while you sleep.
+Deploy the daemon pointed at the tracker, with Claude Code behind the runner contract.
+WORKFLOW.md per project. Now agents work while you sleep.
 
 **Phase 3 — Eval ring + previews (week 4).**
 Ring-2 eval agent as a GitHub Action on PRs; preview deploys per adapter; daily digest scheduled
@@ -334,17 +333,16 @@ unguarded agents is a faster way to make messes.
 
 ## 12. Open Questions (deliberately deferred)
 
-1. **Linear ↔ GitHub sync** — webhook service or polling? (Phase 2 decision; polling is fine to start.)
+1. **Tracker ↔ GitHub sync** — webhook service or polling? (Phase 2 decision; polling is fine to start.)
 2. **Per-project vs. shared daemon** — start shared, split if projects need different trust levels.
 3. **Hermes runner contract** — depends on what Hermes exposes; spec it when Phase 4 nears.
 4. **Multi-repo projects** (e.g., Next + Strapi split repos) — contract spans repos; issue carries repo target. Design when it first occurs.
-5. **Cost telemetry** — Symphony tracks tokens per session; decide where you want to see it (digest vs. Linear comment).
+5. **Cost telemetry** — the daemon tracks tokens per session; decide where you want to see it (digest vs. tracker comment).
 
 ---
 
 ## 13. References
 
-- Symphony spec: github.com/openai/symphony (SPEC.md, Draft v1) — daemon loop, WORKFLOW.md, per-issue workspaces, Human Review handoff.
 - Crabbox: github.com/openclaw/crabbox — remote testbox runner; optional Ring-1 substrate.
 - steipete's agent git rules (gist d3b9db3…) — atomic commits, no destructive git; absorbed into L4.
 - This repo's v1: contract/gates/adapters/proof — absorbed into L5.

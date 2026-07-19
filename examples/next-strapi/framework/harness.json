@@ -40,7 +40,8 @@
       "collect_proof"
     ],
     "G4": [
-      "write_report"
+      "write_report",
+      "validate_proof"
     ]
   }
 }

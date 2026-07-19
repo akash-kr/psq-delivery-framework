@@ -1,7 +1,7 @@
 ---
 tracker:
-  kind: linear
-  project_slug: "{{ LINEAR_PROJECT_SLUG }}"
+  kind: "{{ TRACKER_KIND }}"
+  project_slug: "{{ TRACKER_PROJECT_SLUG }}"
   required_labels:
     - agent-ready
   active_states:
@@ -25,15 +25,10 @@ hooks:
 agent:
   max_concurrent_agents: 1
   max_turns: 8
-codex:
-  command: "{{ CODEX_COMMAND }}"
-  approval_policy: never
-  thread_sandbox: workspace-write
-  turn_sandbox_policy:
-    type: workspaceWrite
-    networkAccess: true
+runner:
+  command: "{{ RUNNER_COMMAND }}"
 server:
-  port: {{ SYMPHONY_PORT }}
+  port: {{ ORCHESTRATOR_PORT }}
 ---
 
 You are working on issue `{{ issue.identifier }}`.

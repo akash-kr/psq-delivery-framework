@@ -3,24 +3,26 @@
   "project": {
     "name": "grounded-delivery-framework",
     "type": "framework",
-    "adapter": "static-site"
+    "adapter": "python"
   },
   "paths": {
     "contract": "framework/contract.yml",
     "gates": "framework/gates.yml",
     "lanes": "framework/lanes.yml",
     "proof_report": ".grounding/proof-report.md",
+    "proof_json": ".grounding/proof-report.json",
+    "gate_status": ".grounding/gate-status.json",
     "logs_dir": ".grounding/logs",
     "screenshots_dir": ".grounding/screenshots"
   },
   "commands": {
-    "install": "",
-    "lint": "",
-    "typecheck": "",
-    "build": "",
-    "test": "",
-    "screenshot": "",
-    "package": ""
+    "install": "skip",
+    "lint": "python3 -m py_compile scripts/gdf.py tools/review-server.py tools/escalation-watcher.py",
+    "typecheck": "skip",
+    "build": "skip",
+    "test": "python3 -m unittest discover -s tests",
+    "screenshot": "skip",
+    "package": "skip"
   },
   "gates": {
     "G0": [
@@ -33,13 +35,15 @@
       "build"
     ],
     "G2": [
-      "test"
+      "test",
+      "screenshot"
     ],
     "G3": [
       "collect_proof"
     ],
     "G4": [
-      "write_report"
+      "write_report",
+      "validate_proof"
     ]
   },
   "proof": {
@@ -58,4 +62,3 @@
     ]
   }
 }
-
