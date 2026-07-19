@@ -1,6 +1,7 @@
 adapter:
   id: static-site
   name: Static Site
+  priority: 50
   applies_to:
     - html
     - css
@@ -21,13 +22,14 @@ commands:
   lint: "skip"
   typecheck: "skip"
   build: "skip"
-  test: "skip"
-  screenshot: "skip"
-  package: "skip"
+  unit_test: "skip"
+  ai_review: ""
+  e2e_test: ""
+  visual_test: ""
+  integration_test: "skip"
 
 proof:
   recommended:
     - changed_files
     - manual_browser_check
     - screenshots_when_visual
-

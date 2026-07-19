@@ -6,3 +6,4 @@
 /framework/contract.yml @akash-kr
 /framework/gates.yml @akash-kr
 /watcher.rules.yml @akash-kr
+/tools/escalation-watcher.py @akash-kr

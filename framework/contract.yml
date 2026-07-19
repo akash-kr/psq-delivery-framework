@@ -1,57 +1,77 @@
-# Grounded Delivery Contract
-#
-# Copy and edit this file for each project or milestone.
+# PSQ Delivery Contract
+# Copy and edit this file for each project or milestone. CI must run
+# `scripts/verify-contract --strict` before G1.
 
 contract:
-  id: grounded-delivery-contract
-  version: 0.1.0
-  status: draft
-  owner: unset
+  id: psq-delivery-framework
+  version: 1.1.0
+  status: active
+  owner: delivery-owner
   approvers:
-    product: unset
-    design: unset
-    engineering: unset
-    qa: unset
+    design: design-owner
+    engineering: engineering-owner
+    qa: qa-owner
 
 project:
-  name: unset
-  type: unset # website | web_app | cms | api | library | mobile | docs | mixed
-  adapter: unset # see adapters/
-  repo: unset
+  name: PSQ Delivery Framework
+  type: framework
+  adapter: python
+  repo: psq-delivery-framework
 
 objective:
-  summary: "Describe the outcome this project or milestone must deliver."
+  summary: "Enforce the four-gate delivery process defined by the PSQ framework deck."
   primary_users:
-    - unset
+    - design
+    - engineering
+    - qa
   success_signals:
-    - "A reviewer can verify the outcome from the proof bundle."
+    - "G1 proves the build and unit tests."
+    - "G2 proves browser behavior and visual conformance where applicable."
+    - "G3 re-runs the journey against the integrated backend where applicable."
+    - "G4 records client UAT approval before milestone release."
 
 scope:
   in:
-    - "Define the smallest valuable outcome."
+    - "Contract validation, four gates, proof collection, CI, adapters, and policy-driven escalations."
   out:
-    - "Name adjacent work that should not be pulled into this run."
+    - "Issue tracking, autonomous agent orchestration, sales workflows, and document annotation."
   assumptions:
-    - "Replace this with explicit assumptions."
+    - "Repository branch protection supplies the Design and QA approval enforcement that local scripts cannot prove."
   unknowns:
-    - "Replace this with known gaps or decisions needed."
+    - "Client-specific Slack, email, invoice, and GitLab approval integrations are configured by each deployment."
 
 quality:
   required:
     - installable
     - buildable
     - testable
-    - documented
+    - visually_verified_when_ui
+    - integration_verified_when_backend
+    - uat_approved
     - proof_collected
   optional:
-    - browser_screenshots
     - accessibility_check
     - performance_check
 
 acceptance:
   - id: AC-001
-    statement: "The contract is filled out for the project."
-    proof: "framework/contract.yml has project, objective, scope, and acceptance sections populated."
+    statement: "The executable lifecycle uses the deck's G1 Build, G2 Validate, G3 Backend wired, and G4 Client UAT gates."
+    proof: "framework/gates.yml and framework/harness.json"
+  - id: AC-002
+    statement: "A gate cannot pass when a required command is unconfigured or when a prerequisite gate is stale or red."
+    proof: "tests/test_gdf.py"
+  - id: AC-003
+    statement: "G4 cannot release a milestone without a matching client UAT approval record."
+    proof: "tests/test_gdf.py and framework/uat-approval.example.json"
+  - id: AC-004
+    statement: "The proof bundle identifies the contract, source revision, gate results, command logs, and milestone readiness."
+    proof: "framework/proof-schema.json and .grounding proof output"
+  - id: AC-005
+    statement: "Delivery adapters require an explicit Codex merge-request review integration."
+    proof: "adapters/*.yml leave ai_review unconfigured so G1 cannot pass silently"
+  - id: AC-006
+    statement: "Missed gate deadlines, stuck gates, unapproved contract changes, delayed UAT, milestone risk, and missing proof can be routed to Slack without duplicate alert spam."
+    proof: "watcher.rules.yml, tools/escalation-watcher.py, and tests/test_gdf.py"
 
 proof:
   required_files:
@@ -62,5 +82,9 @@ proof:
 
 change_control:
   contract_changes_require_review: true
-  approval_note: "Contract changes should be visible in PR review."
-
+  required_approvals:
+    - design
+    - qa
+  approval_note: "Enforce with protected branches and CODEOWNERS in the target forge."
+  escalation_changes_require_review: true
+  escalation_note: "Treat watcher.rules.yml as a delivery contract: validate it in G1 and require Delivery/QA ownership in the target forge."

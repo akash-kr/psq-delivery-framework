@@ -1,6 +1,7 @@
 adapter:
   id: python
   name: Python
+  priority: 50
   applies_to:
     - api
     - cli
@@ -18,18 +19,19 @@ commands:
   lint: "python3 -m ruff check ."
   typecheck: "python3 -m mypy ."
   build: "python3 -m compileall ."
-  test: "python3 -m pytest"
-  screenshot: ""
-  package: "python3 -m build"
+  unit_test: "python3 -m pytest"
+  ai_review: ""
+  e2e_test: "skip"
+  visual_test: "skip"
+  integration_test: ""
 
 proof:
   recommended:
     - install_log
     - lint_log
     - typecheck_log
-    - test_log
-    - package_log
+    - unit_test_log
+    - integration_test_log
 
 notes:
-  - "If the project does not use ruff, mypy, pytest, or build, override commands in framework/harness.json."
-
+  - "Configure integration_test for APIs/services, or mark it 'skip' explicitly for libraries and CLIs."

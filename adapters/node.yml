@@ -1,6 +1,7 @@
 adapter:
   id: node
   name: Node.js
+  priority: 20
   applies_to:
     - api
     - cli
@@ -12,17 +13,18 @@ detect:
     - package.json
 
 commands:
-  install: "npm install"
-  lint: "npm run lint --if-present"
-  typecheck: "npm run typecheck --if-present"
-  build: "npm run build --if-present"
-  test: "npm test --if-present"
-  screenshot: ""
-  package: "npm pack --dry-run"
+  install: "if [ -f package-lock.json ]; then npm ci; else npm install; fi"
+  lint: "npm run lint"
+  typecheck: "npm run typecheck"
+  build: "npm run build"
+  unit_test: "npm test"
+  ai_review: ""
+  e2e_test: "skip"
+  visual_test: "skip"
+  integration_test: "npm run test:integration"
 
 proof:
   recommended:
     - install_log
-    - test_log
-    - package_contents
-
+    - unit_test_log
+    - integration_test_log

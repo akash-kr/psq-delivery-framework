@@ -1,50 +1,58 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "1.0.0",
+  "command_timeout_seconds": 1800,
   "project": {
-    "name": "grounded-delivery-framework",
+    "name": "psq-delivery-framework",
     "type": "framework",
     "adapter": "python"
   },
   "paths": {
     "contract": "framework/contract.yml",
     "gates": "framework/gates.yml",
-    "lanes": "framework/lanes.yml",
     "proof_report": ".grounding/proof-report.md",
     "proof_json": ".grounding/proof-report.json",
     "gate_status": ".grounding/gate-status.json",
+    "uat_approval": ".grounding/uat-approval.json",
+    "milestone_release": ".grounding/milestone-release.json",
     "logs_dir": ".grounding/logs",
     "screenshots_dir": ".grounding/screenshots"
   },
   "commands": {
     "install": "skip",
-    "lint": "python3 -m py_compile scripts/gdf.py tools/review-server.py tools/escalation-watcher.py",
+    "lint": "python3 -m py_compile scripts/gdf.py tools/escalation-watcher.py",
     "typecheck": "skip",
     "build": "skip",
-    "test": "python3 -m unittest discover -s tests",
-    "screenshot": "skip",
-    "package": "skip"
+    "unit_test": "python3 -m unittest discover -s tests",
+    "ai_review": "skip",
+    "e2e_test": "skip",
+    "visual_test": "skip",
+    "integration_test": "skip"
   },
   "gates": {
-    "G0": [
-      "verify_contract"
-    ],
     "G1": [
+      "verify_contract",
       "install",
       "lint",
       "typecheck",
-      "build"
+      "build",
+      "unit_test",
+      "ai_review"
     ],
     "G2": [
-      "test",
-      "screenshot"
+      "e2e_test",
+      "visual_test"
     ],
     "G3": [
-      "collect_proof"
+      "integration_test"
     ],
     "G4": [
-      "write_report",
-      "validate_proof"
+      "verify_uat_approval"
     ]
+  },
+  "requires": {
+    "G2": ["G1"],
+    "G3": ["G1", "G2"],
+    "G4": ["G1", "G2", "G3"]
   },
   "proof": {
     "required": [
@@ -52,11 +60,10 @@
       "gate_results",
       "commands",
       "risks",
-      "decision_needed"
+      "source_revision"
     ],
     "optional": [
       "screenshots",
-      "citations",
       "install_logs",
       "test_logs"
     ]

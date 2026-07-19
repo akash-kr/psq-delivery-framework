@@ -1,0 +1,9 @@
+{
+  "contract_id": "project-contract-id",
+  "contract_version": "1.0.0",
+  "source_revision": "git-revision-tested-by-g1-g3",
+  "status": "approved",
+  "approved_by": "client-identity",
+  "approved_at": "2026-07-19T12:00:00+05:30",
+  "notes": "UAT completed."
+}
