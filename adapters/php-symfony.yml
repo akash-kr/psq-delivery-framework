@@ -1,6 +1,7 @@
 adapter:
   id: php-symfony
   name: PHP Symfony
+  priority: 80
   applies_to:
     - web_app
     - api
@@ -17,17 +18,19 @@ commands:
   lint: "composer lint"
   typecheck: "composer analyse"
   build: "php bin/console cache:warmup"
-  test: "composer test"
-  screenshot: ""
-  package: ""
+  unit_test: "composer test"
+  ai_review: ""
+  e2e_test: "skip"
+  visual_test: "skip"
+  integration_test: "composer test:integration"
 
 proof:
   recommended:
     - composer_install_log
     - lint_log
-    - test_log
+    - unit_test_log
+    - integration_test_log
     - route_check
 
 notes:
   - "Override command names in framework/harness.json if the Symfony project uses different Composer scripts."
-

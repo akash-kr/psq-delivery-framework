@@ -1,6 +1,7 @@
 adapter:
   id: strapi
   name: Strapi CMS
+  priority: 90
   applies_to:
     - cms
     - headless_cms
@@ -15,19 +16,22 @@ detect:
     - src/content-types
 
 commands:
-  install: "npm install"
-  lint: "npm run lint --if-present"
-  typecheck: "npm run typecheck --if-present"
+  install: "if [ -f package-lock.json ]; then npm ci; else npm install; fi"
+  lint: "npm run lint"
+  typecheck: "npm run typecheck"
   build: "npm run build"
-  test: "npm test --if-present"
-  screenshot: "npm run test:e2e --if-present"
-  package: ""
+  unit_test: "npm test"
+  ai_review: ""
+  e2e_test: "skip"
+  visual_test: "skip"
+  integration_test: "npm run test:integration"
 
 proof:
   recommended:
     - content_types_reviewed
     - seed_data_verified
     - admin_build_log
+    - unit_test_log
+    - integration_test_log
     - api_health_check
     - preview_workflow_check
-

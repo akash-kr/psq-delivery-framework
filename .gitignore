@@ -9,6 +9,7 @@
 .grounding/proof-report.md
 .grounding/proof-report.json
 .grounding/gate-status.json
+.grounding/escalation-state.json
 
 node_modules/
 dist/

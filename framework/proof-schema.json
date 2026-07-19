@@ -1,22 +1,35 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/grounded-delivery-framework/proof-schema.json",
-  "title": "Grounded Delivery Proof Report",
+  "$id": "urn:psq:delivery-framework:proof-schema:1",
+  "title": "PSQ Delivery Proof Report",
   "type": "object",
   "required": [
     "schema_version",
     "project",
+    "contract_id",
+    "contract_version",
+    "source_revision",
     "timestamp",
     "output_delivered",
     "proof",
-    "decision_needed",
-    "recommended_next_issues"
+    "gate_results",
+    "risks",
+    "milestone_ready"
   ],
   "properties": {
     "schema_version": {
       "type": "string"
     },
     "project": {
+      "type": "string"
+    },
+    "contract_id": {
+      "type": "string"
+    },
+    "contract_version": {
+      "type": "string"
+    },
+    "source_revision": {
       "type": "string"
     },
     "timestamp": {
@@ -36,6 +49,7 @@
     },
     "gate_results": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
         "required": [
@@ -50,8 +64,7 @@
             "enum": [
               "pass",
               "fail",
-              "blocked",
-              "skipped"
+              "blocked"
             ]
           },
           "evidence": {
@@ -69,27 +82,20 @@
         "type": "string"
       }
     },
-    "decision_needed": {
-      "type": "string"
+    "milestone_ready": {
+      "type": "boolean"
     },
-    "recommended_next_issues": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "title",
-          "lane"
-        ],
-        "properties": {
-          "title": {
-            "type": "string"
-          },
-          "lane": {
-            "type": "string"
-          }
-        }
+    "uat_approval": {
+      "type": ["object", "null"],
+      "required": ["contract_id", "contract_version", "source_revision", "status", "approved_by", "approved_at"],
+      "properties": {
+        "contract_id": {"type": "string"},
+        "contract_version": {"type": "string"},
+        "source_revision": {"type": "string"},
+        "status": {"type": "string"},
+        "approved_by": {"type": "string"},
+        "approved_at": {"type": "string"}
       }
     }
   }
 }
-

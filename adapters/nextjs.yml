@@ -1,6 +1,7 @@
 adapter:
   id: nextjs
   name: Next.js
+  priority: 100
   applies_to:
     - website
     - web_app
@@ -16,21 +17,24 @@ detect:
     - pages
 
 commands:
-  install: "npm install"
-  lint: "npm run lint --if-present"
-  typecheck: "npm run typecheck --if-present"
+  install: "if [ -f package-lock.json ]; then npm ci; else npm install; fi"
+  lint: "npm run lint"
+  typecheck: "npm run typecheck"
   build: "npm run build"
-  test: "npm test --if-present"
-  screenshot: "npm run test:e2e --if-present"
-  package: ""
+  unit_test: "npm test"
+  ai_review: ""
+  e2e_test: "npm run test:e2e"
+  visual_test: "npm run test:visual"
+  integration_test: "npm run test:e2e:integrated"
 
 proof:
   recommended:
     - install_log
     - lint_log
     - build_log
-    - test_log
+    - unit_test_log
+    - e2e_test_log
+    - integration_test_log
     - desktop_screenshot
     - mobile_screenshot
     - console_error_check
-

@@ -6,9 +6,22 @@ on:
     branches:
       - main
       - master
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      approved_by:
+        description: Client UAT approver identity
+        required: true
+        type: string
+      notes:
+        description: Optional UAT notes
+        required: false
+        type: string
 
 jobs:
   gates:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
 
     steps:
@@ -20,11 +33,8 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Verify contract
-        run: scripts/verify-contract
-
-      - name: Run gates
-        run: scripts/run-gate all
+      - name: Run internal gates (G1-G3)
+        run: scripts/run-gate internal
 
       - name: Collect proof
         if: always()
@@ -35,8 +45,82 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: grounded-delivery-proof
+          include-hidden-files: true
           path: |
             .grounding/
             framework/contract.yml
             framework/harness.json
 
+  client-uat:
+    if: github.event_name == 'workflow_dispatch'
+    needs: gates
+    runs-on: ubuntu-latest
+    environment: client-uat
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Download internal gate proof
+        uses: actions/download-artifact@v4
+        with:
+          name: grounded-delivery-proof
+          path: .
+      - name: Verify UAT and release milestone
+        env:
+          UAT_APPROVED_BY: ${{ inputs.approved_by }}
+          UAT_NOTES: ${{ inputs.notes }}
+        run: |
+          scripts/approve-uat --approved-by "$UAT_APPROVED_BY" --notes "$UAT_NOTES"
+          scripts/run-gate G4
+      - name: Upload milestone release
+        uses: actions/upload-artifact@v4
+        with:
+          name: grounded-delivery-milestone-release
+          include-hidden-files: true
+          path: .grounding/
+
+  scheduled-escalations:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Restore latest default-branch proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          run_id="$(gh run list --workflow gates.yml --branch "$DEFAULT_BRANCH" --event push --status completed --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
+          if [[ -z "$run_id" ]]; then
+            echo "No completed default-branch gate run is available."
+            exit 2
+          fi
+          gh run download "$run_id" --name grounded-delivery-proof --dir .
+
+      - name: Restore escalation incident state
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_id="$(gh run list --workflow gates.yml --event schedule --status completed --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
+          if [[ -n "$run_id" ]]; then
+            gh run download "$run_id" --name grounded-escalation-state --dir .
+          fi
+
+      - name: Evaluate escalation contract
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: python3 tools/escalation-watcher.py
+
+      - name: Persist escalation incident state
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: grounded-escalation-state
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14
+          path: .grounding/escalation-state.json

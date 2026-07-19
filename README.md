@@ -1,150 +1,123 @@
-# Grounded Delivery Framework
+# PSQ Delivery Framework
 
-One contract up front. A gate at every step. Proof instead of opinion.
-
-Design, Dev, and QA agree on a single spec before work starts. Every piece of
-work then passes through five pass/fail gates decided by tools — nothing moves
-forward on someone's say-so, and nothing reaches review without evidence a
-reviewer can inspect. The framework is stack-agnostic: a one-file static site
-and a Next.js + Strapi build run the exact same loop, with adapters mapping
-the gates to real commands.
+Executable architecture for the process in [`psq-framework-deck.html`](psq-framework-deck.html): one shared contract, four ordered gates, inspectable proof, and automated escalation.
 
 ```text
-contract  →  G0 scope  →  G1 build  →  G2 behavior  →  G3 proof  →  G4 review-ready
-                │             │             │              │             │
-           spec signed   install/lint   tests + visual   evidence     validated
-                          typecheck      screenshots     collected    report + PR
+contract signed
+      │
+      ▼
+G1 Build ──▶ G2 Validate ──▶ G3 Backend wired ──▶ G4 Client UAT
+ UI + unit      browser +         same journey       approval record
+ tests          visual proof      on real backend    + milestone release
+      │              │                  │                   │
+      └──────── red loops back to the responsible team ─────┘
 ```
 
-A gate where **zero checks ran fails** (exit 3) instead of passing vacuously.
-Steps that genuinely do not apply to a stack are marked with the explicit
-command value `"skip"` — a recorded decision, not a silent gap.
+G1–G3 are internal CI gates. G4 is intentionally separate: it runs only after the client UAT record is approved. A green G4 writes `.grounding/milestone-release.json` with `status: ready_for_invoice`.
 
-## Quick Start
+## Contract
 
-Copy the template into a project, wire the adapter, run the gates:
+[`framework/contract.yml`](framework/contract.yml) is the shared Design, Engineering, and QA agreement. It defines scope, data and behavior expectations, acceptance criteria, proof, and change control. Run strict validation in CI:
 
 ```bash
-cp -r framework/ adapters/ scripts/ watcher.rules.yml AGENTS.md  <your-repo>/
-cd <your-repo>
-
-scripts/detect-stack              # suggests matching adapters (e.g. "nextjs")
-scripts/apply-adapter nextjs      # fills empty commands in framework/harness.json
-$EDITOR framework/contract.yml    # objective, scope, acceptance criteria + proof
-
-scripts/run-gate all              # the whole loop, in order
-scripts/collect-proof             # evidence bundle for the reviewer
+scripts/verify-contract --strict
 ```
 
-`scripts/verify-contract --strict` additionally fails on any placeholder
-`unset` value left in the contract.
+Repository controls remain mandatory: protect the default branch, require the internal gate job, require two approvals for contract changes (Design and QA), and restrict the UAT environment/job to authorized approvers. Those forge settings cannot be enforced by files in this repository alone.
 
-## The Workflow, End to End
+## Gates and proof
 
-**1. Sign the contract.** `framework/contract.yml` is the single source of
-truth, read three ways: Design freezes screens and states, Dev gets the data
-shapes, QA gets the pass/fail rules. Each acceptance criterion names the proof
-that closes it ("card shows price → test checks for `.price`"). It lives in
-Git; `.github/CODEOWNERS` plus branch protection means it cannot change
-without the right people approving, and commits touching it carry an
-`Approved-by:` trailer.
-
-**2. Turn rules into commands.** QA's judgement goes into defining checks;
-the harness runs them. In `framework/harness.json`, `lint` might be eslint,
-`test` a Playwright suite, `screenshot` a visual-regression run using
-Playwright's built-in `toHaveScreenshot()` — see
-[docs/visual-proof.md](docs/visual-proof.md).
-
-**3. Run the gates before every push.** A failed contract rule fails the
-gate; the tool says no, nobody argues in a review thread. Fix and re-run.
-Every command's output lands in `.grounding/logs/`, and per-gate results (with
-how long a gate has been red) land in `.grounding/gate-status.json`.
-
-**4. Review evidence, not vibes.** `collect-proof` writes
-`.grounding/proof-report.md` (human) and `proof-report.json` (validated
-against `framework/proof-schema.json` by the `validate-proof` step in G4):
-gate results, changed files, logs, screenshots, and the decision being asked
-for. CI — `.github/workflows/gates.yml` or `.gitlab-ci.yml`, same commands —
-re-runs everything on a clean machine, so green cannot be faked locally.
-
-**5. Let the watcher chase blockers.** `tools/escalation-watcher.py` runs on
-a schedule, reads `watcher.rules.yml`, and shouts when a gate is red past its
-SLA, the contract changed without approval, or a milestone is due with gates
-not green. Slack first (`SLACK_WEBHOOK_URL`), stdout fallback:
+The harness is configured in [`framework/harness.json`](framework/harness.json), with the human-readable requirements in [`framework/gates.yml`](framework/gates.yml).
 
 ```bash
+scripts/run-gate G1          # build + unit checks
+scripts/run-gate G2          # browser journey + visual comparison
+scripts/run-gate G3          # integrated backend journey
+scripts/run-gate internal    # G1 through G3, in order
+scripts/approve-uat --approved-by "client@example.com" --notes "UAT complete"
+scripts/run-gate G4          # requires the protected approval record above
+scripts/run-gate all         # full sequence; normally blocks at pending UAT
+scripts/collect-proof
+```
+
+Each later gate requires every earlier gate to be green for the same source revision. Empty commands fail instead of silently passing. A literal `"skip"` is allowed only as an explicit not-applicable decision; for example, a frontend-only site may skip backend integration.
+
+The deck also requires a Codex review on every merge request. Adapters intentionally leave `ai_review` unconfigured, so G1 stays red until the target repository maps it to its Codex review status/API check. Do not mark this step `"skip"` on delivery projects.
+
+Outputs are generated under `.grounding/`:
+
+- `gate-status.json` — status, steps, failure age, and source revision.
+- `logs/` and `screenshots/` — command and visual evidence.
+- `uat-approval.json` — protected-job audit record tied to the tested revision.
+- `proof-report.json` / `.md` — contract, revision, gates, proof, risks, and milestone readiness.
+- `milestone-release.json` — emitted only after all four gates pass.
+
+The JSON report is checked against the required shape in [`framework/proof-schema.json`](framework/proof-schema.json).
+
+## Stack adapters
+
+Adapters translate generic gate checks into project commands without changing the gate engine:
+
+```bash
+scripts/detect-stack
+scripts/apply-adapter nextjs
+scripts/apply-adapter nextjs --force  # replace custom commands intentionally
+```
+
+Included adapters: Next.js, Strapi, generic web app, Node.js, Python, Symfony, and static sites. Required npm scripts are not invoked with `--if-present`; a missing test is a failed configuration, not a green check. Package-lock projects use `npm ci` for reproducibility.
+
+After applying an adapter, review every command. Configure project-specific test names, and use `"skip"` only when a gate check genuinely does not apply.
+
+## CI and UAT
+
+- [`.gitlab-ci.yml`](.gitlab-ci.yml) runs strict contract validation and G1–G3, then exposes G4 as a manual `client-uat` environment job.
+- [`.github/workflows/gates.yml`](.github/workflows/gates.yml) provides the equivalent portable workflow; G4 runs only by manual dispatch through the protected `client-uat` environment.
+
+Before G4, the protected UAT job runs `scripts/approve-uat` to write a revision-bound approval record. [`framework/uat-approval.example.json`](framework/uat-approval.example.json) documents its shape. The protected environment/job is the authorization boundary; the generated file is the durable pipeline artifact.
+
+## Escalation contract
+
+[`watcher.rules.yml`](watcher.rules.yml) is a versioned operational contract, not just watcher configuration. Strict contract verification validates it before G1. It currently supports:
+
+- `gate_status` — a failed or blocked gate stays red beyond its SLA, with optional per-gate SLAs;
+- `gate_deadline` — a gate is not green by an agreed time, including work that never started;
+- `contract_approval` — the contract is edited or its latest commit lacks the named approval trailers;
+- `milestone_risk` — a milestone enters its warning/critical window while gates are missing or stale;
+- `uat_pending` — internal gates are green but client UAT has exceeded its response SLA;
+- `artifact_missing` — required proof is absent after a configured gate.
+
+Rules name a Slack channel configuration, severity, responsible people, repeat interval, and condition. Stuck-gate and UAT rules may define `critical_after_hours`; crossing that threshold bypasses the cooldown and immediately sends the higher-severity escalation. The incoming webhook controls the actual Slack destination; `notify` records the intended owners in the message. Multiple channel entries can use different webhook environment variables.
+
+```bash
+python3 tools/escalation-watcher.py --validate
+python3 tools/escalation-watcher.py --dry-run
+python3 tools/escalation-watcher.py
 python3 tools/escalation-watcher.py --loop 30
 ```
 
-Change a threshold in `watcher.rules.yml`, change the rule — no code.
+Set `SLACK_WEBHOOK_URL` to send Slack alerts. Without it—or if delivery fails—the default channel writes to stdout so cron/CI still sees the alert. The watcher stores active incidents in `.grounding/escalation-state.json`; persist that file between scheduled runs to deduplicate alerts, re-notify after the configured interval, and send a recovery message when the condition clears.
 
-## Adapters
-
-Adapters are thin YAML command maps that keep the loop stack-agnostic.
-Supported out of the box: `static-site`, `web-app`, `nextjs`, `strapi`,
-`node`, `python`, `php-symfony`. Adding a stack = one small YAML file with a
-`detect:` block and a `commands:` map; `detect-stack` and `apply-adapter`
-pick it up automatically.
-
-## Repository Layout
+Two time-based rules ship disabled because their dates are project-specific. For each milestone, set and enable `gate-deadline` and `milestone-at-risk`. Contract commits satisfy the default approval rule with distinct trailers:
 
 ```text
-framework/
-  contract.yml       The work contract (template — copy and fill per project).
-  gates.yml          Gate definitions G0–G4.
-  harness.json       Machine-readable config: paths, commands, gate steps.
-  lanes.yml          Output routing by lane (research/spec/code/qa/...).
-  proof-schema.json  Schema the JSON proof report must satisfy.
-adapters/            Stack command maps (thin YAML).
-scripts/
-  gdf.py             The harness engine (stdlib-only Python).
-  detect-stack | apply-adapter | run-gate | verify-contract |
-  collect-proof | write-report                     (thin wrappers)
-tools/
-  escalation-watcher.py   Alerts on red gates, unapproved contract
-                          changes, milestone risk (watcher.rules.yml).
-  review-server.py        Serves annotatable HTML docs, collects notes.
-  annotation-watcher.sh   Turns submitted notes into agent revision runs.
-tests/               Harness self-tests (run by gate G2).
-watcher.rules.yml    Escalation thresholds — edit values, not code.
-.github/workflows/gates.yml   GitHub Actions pipeline.
-.gitlab-ci.yml                Same pipeline for GitLab.
-.github/CODEOWNERS            Contract changes require owner review.
-docs/
-  setup.md           Step-by-step project onboarding.
-  gates-mapping.md   Deck milestone gates vs. framework issue gates.
-  visual-proof.md    How "screenshots match the design" is enforced.
-  examples/          Worked examples (static site, Next + Strapi).
-examples/            Copyable per-stack harness configurations.
+Approved-by: design
+Approved-by: qa
 ```
 
-## Required End-of-Run Format
+Run the watcher from a host that has the latest `.grounding/gate-status.json` and proof artifacts. A long-running process naturally retains them; a CI scheduler must restore both the gate artifacts and escalation state before checking.
 
-Every agent or automation run ends with:
+The GitHub workflow already runs this check every 30 minutes, restoring the latest completed default-branch proof and the previous incident state. Add `SLACK_WEBHOOK_URL` as a GitHub Actions secret. For GitLab, create a pipeline schedule (for example every 30 minutes) and add the same value as a masked CI/CD variable; the scheduled job reuses the gate artifact and persists state through the GitLab cache.
+
+## Repository layout
 
 ```text
-Output delivered:  [links/files]
-Proof:             [tests/screenshots/citations/checks]
-Decision needed:   [approve / rework / choose option]
-Recommended next issues:  1. [title] - lane:[lane]
+framework/   contract, gate definitions, harness, proof schema, UAT record shape
+adapters/    stack-specific command maps
+scripts/     stdlib-only Python gate engine and thin shell entry points
+tools/       escalation watcher
+tests/       harness regression tests
 ```
-
-## Design Principles
-
-- The framework owns process, not product architecture.
-- Adapters are thin command maps; the gate loop never names npm or pip.
-- Proof is first-class output. A green run without proof is not acceptable —
-  and a gate that verified nothing is not green.
-- A rule that only lives in a prompt is a suggestion; enforcement belongs in
-  machinery (gates, CI, CODEOWNERS, the watcher).
-- A blocked run is acceptable when the blocker is explicit.
-
-## What This Is Not
-
-Not a project starter for any particular stack, not tied to any particular
-issue tracker, forge, or orchestrator, and not a replacement for real tests,
-reviews, or approvals — it exists to make those cheap and unavoidable.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [`LICENSE`](LICENSE).
